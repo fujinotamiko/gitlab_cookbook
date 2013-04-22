@@ -95,6 +95,18 @@ git "#{doc_root}/gitlab" do
 	action :checkout
 end
 
+# ディレクトリの権限変更
+%w[log tmp].each do |directory_name| 
+	directory "#{doc_root}/gitlab/#{directory_name}"  do
+		group "#{node['gitlab']['user']}"
+		owner "#{node['gitlab']['user']}"
+		recursive true
+	end
+	directory "#{doc_root}/gitlab/#{directory_name}" do
+			mode 0755
+	end
+end
+
 # 設定ファイルを配置
 node['gitlab']['templates'].each do |template, attr|
 	template "#{attr['path']}/#{template}" do
@@ -106,6 +118,7 @@ node['gitlab']['templates'].each do |template, attr|
 		)
 		source "#{template}.erb"
 		mode "0755"
+		notifies :restart, "service[httpd]"
 	end
 end
 
